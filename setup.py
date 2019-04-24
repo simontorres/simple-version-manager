@@ -3,7 +3,6 @@ import os
 from configparser import ConfigParser
 from setuptools import setup, find_packages
 
-
 this_folder = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -53,6 +52,6 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'vincrement = {:s}.simple_version_manager'.format(PACKAGE_NAME)]
+            'vincrement=simple_version_manager.simple_version_manager:run']
     }
 )

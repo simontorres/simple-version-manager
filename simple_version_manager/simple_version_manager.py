@@ -3,6 +3,13 @@ import argparse
 import os
 import re
 import sys
+import logging
+
+
+log_format = '%(message)s'
+logging.basicConfig(level=logging.INFO, format=log_format)
+
+log = logging.getLogger(__name__)
 
 
 try:
@@ -37,6 +44,13 @@ def get_args(arguments=None):
                         dest='major',
                         help='Increase version by one.')
 
+    parser.add_argument('--set',
+                        action='store',
+                        dest='set',
+                        type=str,
+                        default='0',
+                        help='Set version to a certain value.')
+
     parser.add_argument('--release',
                         action='store_true',
                         dest='release',
@@ -57,7 +71,7 @@ class LooseVersionManager(LooseVersion):
         self.files = files
         self.previous_version = self.vstring
         self.args = get_args()
-        print(self.args)
+        self._check_for_mismatch()
 
     def __call__(self):
         if self.args.dev:
@@ -68,8 +82,41 @@ class LooseVersionManager(LooseVersion):
             self._up_minor()
         elif self.args.major:
             self._up_major()
+        elif self.args.set != '0':
+            self._set()
         else:
             self._recompile()
+
+    def _check_for_mismatch(self):
+        for _file in self.files:
+            this_folder = os.getcwd()
+            with open(os.path.join(this_folder, _file), 'r') as f:
+                try:
+                    assert self.vstring in f.read()
+                except AssertionError:
+                    log.critical("File \"{:s}\" does not contain the "
+                                 "correct version. Please fix it by hand."
+                                 "".format(_file))
+                    log.info("Valid version is: {:s}".format(self.vstring))
+                    sys.exit(0)
+
+    def _set(self):
+        comparison = self._cmp(self.args.set)
+        if comparison == 0:
+            log.warning('The new version is the same as old. Nothing to do.')
+            return
+        else:
+            self.parse(self.args.set)
+
+            if comparison == -1:
+                log.warning("Increasing version from {:s} to {:s}".format(
+                    self.previous_version,
+                    self.vstring))
+            else:
+                log.warning("Reducing version from {:s} to {:s}".format(
+                    self.previous_version,
+                    self.vstring))
+            self._update_files()
 
     def _recompile(self):
         if self.args.release:
@@ -84,12 +131,14 @@ class LooseVersionManager(LooseVersion):
         assert isinstance(new_version, str)
         self.parse(vstring=new_version)
         self._update_files()
-        print('recompile version ', self.version, self.vstring)
+        log.debug('Recompile version: New version: {:s}'.format(self.vstring))
 
     def _update_files(self):
         for _file in self.files:
-            print(_file, self.vstring)
-            this_folder = os.path.abspath(os.path.dirname(__file__))
+            log.debug('Updating version on: {:s} to {:s}'.format(_file,
+                                                                 self.vstring))
+            this_folder = os.getcwd()
+            log.debug('This folder: {:s}'.format(this_folder))
             assert os.path.isfile(os.path.join(this_folder, _file))
             new_content = None
             with open(os.path.join(this_folder, _file), 'r') as f:
@@ -101,7 +150,8 @@ class LooseVersionManager(LooseVersion):
 
             with open(os.path.join(this_folder, _file), 'w') as f:
                 f.write(new_content)
-                self.previous_version = self.vstring
+
+        self.previous_version = self.vstring
 
     def _up_dev(self):
         if len(self.version) == 3:
@@ -138,17 +188,27 @@ class LooseVersionManager(LooseVersion):
         self._recompile()
 
 
+def run():
+    this_folder = os.getcwd()
+    if os.path.isfile(os.path.join(this_folder, '.vmconf')):
+        conf.read(['setup.cfg', os.path.join(this_folder, '.vmconf')])
+        files = dict(conf.items('files'))
+        file_list = files['files_to_edit'].split(" ")
+
+        metadata = dict(conf.items('metadata'))
+
+        version = LooseVersionManager(metadata['version'], files=file_list)
+
+        version()
+        log.info('Current version is: {:s}'.format(version.vstring))
+
+    else:
+        log.error('Expecting a ".vmconf" file in current directory')
+        log.info('Creating an empty .vmconf file.')
+        with open(os.path.join(this_folder, '.vmconf'), 'w') as f:
+            f.write("[files]\nfiles_to_edit = setup.cfg version.py\n")
+
+
 if __name__ == '__main__':
-
-    file_list = ['setup.cfg', 'goodman_pipeline/version.py']
-    conf.read([os.path.join(os.getcwd(), 'setup.cfg')])
-    metadata = dict(conf.items('metadata'))
-    print(metadata['version'])
-
-    ver = LooseVersionManager(metadata['version'], files=file_list)
-
-    # ver.up_dev()
-    ver()
-    print(ver)
-
+    run()
 
