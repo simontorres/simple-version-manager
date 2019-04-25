@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/simontorres/simple-version-manager.svg?branch=master)](https://travis-ci.org/simontorres/simple-version-manager)
+[![Coverage Status](https://coveralls.io/repos/github/simontorres/simple-version-manager/badge.svg?branch=master)](https://coveralls.io/github/simontorres/simple-version-manager?branch=master)
 # Simplify version management
 
 The idea behind the development of this small tool is to simplify the process

@@ -1,0 +1,7 @@
+name: version_manager
+
+dependencies:
+  distutils
+  - pip
+  - pip:
+    -coveralls
