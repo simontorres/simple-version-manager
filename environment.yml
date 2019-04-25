@@ -4,4 +4,4 @@ dependencies:
   - distutils
   - pip
   - pip:
-    -coveralls
+    - coveralls
