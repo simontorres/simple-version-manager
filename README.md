@@ -1,6 +1,8 @@
 # Simplify version management
 
-This tool helps you increase 
+The idea behind the development of this small tool is to simplify the process
+of increasing your version number. It is designed to work with a specific format
+explained below.
 
 ## Version format supported
 
@@ -49,11 +51,13 @@ working on version `1.2.3.dev4`
    `--minor` plus dropping _minor_ to zero.
  - ``--release`` will remove the `devN` part leaving you with `1.2.3`. `--release`
    can be used in combination of other options.
+ - ``--set`` Let you set the version to any value.
  
  If you start from a _stable_ version like `2.0.0` you should use the `--dev` 
  argument that will increase the patch number and add the _dev1_ string. `2.0.1.dev1`
 
 
 # References
-https://semver.org/
-http://epydoc.sourceforge.net/stdlib/distutils.version.LooseVersion-class.html
+
+- [distutils.version.LooseVersion](http://epydoc.sourceforge.net/stdlib/distutils.version.LooseVersion-class.html)
+- [Semantic Version](https://semver.org/) (Not used here but a good reference on version numbering)
